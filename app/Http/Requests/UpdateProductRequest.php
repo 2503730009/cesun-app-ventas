@@ -6,23 +6,14 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProductRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'vendor_id'   => ['sometimes','required','integer','exists:vendors,id'],
+            'name'        => ['sometimes','required','string','max:140'],
+            'description' => ['nullable','string'],
+            'price'       => ['sometimes','required','numeric','min:0'],
+            'stock'       => ['sometimes','required','integer','min:0'],
         ];
     }
 }
