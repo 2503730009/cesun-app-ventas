@@ -7,13 +7,17 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProductResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id'          => $this->id,
+            'vendor_id'   => $this->vendor_id,
+            'name'        => $this->name,
+            'description' => $this->description,
+            'price'       => (string) $this->price,
+            'stock'       => $this->stock,
+            'vendor'      => new VendorResource($this->whenLoaded('vendor')),
+            'created_at'  => $this->created_at?->toISOString(),
+        ];
     }
 }
