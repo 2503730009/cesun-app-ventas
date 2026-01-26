@@ -3,48 +3,65 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreVendorRequest;
+use App\Http\Requests\UpdateVendorRequest;
+use App\Http\Resources\VendorResource;
 use App\Models\Vendor;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
-class VendorControlle extends Controller
+class VendorController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): JsonResponse
     {
-        //
+        $vendors = Vendor::query()->latest()->paginate(10);
+
+        return response()->json([
+            'ok' => true,
+            'data' => VendorResource::collection($vendors),
+            'meta' => [
+                'current_page' => $vendors->currentPage(),
+                'last_page' => $vendors->lastPage(),
+                'per_page' => $vendors->perPage(),
+                'total' => $vendors->total(),
+            ],
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreVendorRequest $request): JsonResponse
     {
-        //
+        $vendor = Vendor::create($request->validated());
+
+        return response()->json([
+            'ok' => true,
+            'data' => new VendorResource($vendor),
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Vendor $vendor)
+    public function show(Vendor $vendor): JsonResponse
     {
-        //
+        return response()->json([
+            'ok' => true,
+            'data' => new VendorResource($vendor),
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Vendor $vendor)
+    public function update(UpdateVendorRequest $request, Vendor $vendor): JsonResponse
     {
-        //
+        $vendor->update($request->validated());
+
+        return response()->json([
+            'ok' => true,
+            'data' => new VendorResource($vendor),
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Vendor $vendor)
+    public function destroy(Vendor $vendor): JsonResponse
     {
-        //
+        $vendor->delete();
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Vendor deleted',
+        ]);
     }
 }

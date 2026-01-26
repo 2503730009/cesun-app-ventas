@@ -3,48 +3,68 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
+use App\Http\Resources\ProductResource;
 use App\Models\Product;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): JsonResponse
     {
-        //
+        $products = Product::query()
+            ->with('vendor')
+            ->latest()
+            ->paginate(10);
+
+        return response()->json([
+            'ok' => true,
+            'data' => ProductResource::collection($products),
+            'meta' => [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+            ],
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreProductRequest $request): JsonResponse
     {
-        //
+        $product = Product::create($request->validated());
+
+        return response()->json([
+            'ok' => true,
+            'data' => new ProductResource($product->load('vendor')),
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Product $product)
+    public function show(Product $product): JsonResponse
     {
-        //
+        return response()->json([
+            'ok' => true,
+            'data' => new ProductResource($product->load('vendor')),
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
-        //
+        $product->update($request->validated());
+
+        return response()->json([
+            'ok' => true,
+            'data' => new ProductResource($product->load('vendor')),
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Product $product)
+    public function destroy(Product $product): JsonResponse
     {
-        //
+        $product->delete();
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Product deleted',
+        ]);
     }
 }
