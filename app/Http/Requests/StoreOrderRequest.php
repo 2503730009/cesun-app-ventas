@@ -10,6 +10,8 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'vendor_id' => ['required', 'integer', 'exists:vendors,id'],
+            'customer_name' => ['nullable', 'string', 'max:120'],
+            'customer_phone' => ['nullable', 'string', 'max:30'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],

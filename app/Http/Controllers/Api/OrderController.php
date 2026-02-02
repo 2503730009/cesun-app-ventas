@@ -53,6 +53,8 @@ class OrderController extends Controller
                     'vendor_id' => $validated['vendor_id'],
                     'status' => 'pending',
                     'total' => 0,
+                    'customer_name' => $validated['customer_name'] ?? null,
+                    'customer_phone' => $validated['customer_phone'] ?? null,
                 ]);
 
                 $total = 0;
@@ -116,6 +118,8 @@ class OrderController extends Controller
             ] : null,
             'status' => $order->status,
             'total' => (string) $order->total,
+            'customer_name' => $order->customer_name,
+            'customer_phone' => $order->customer_phone,
             'items' => $order->items->map(function (OrderItem $item) {
                 return [
                     'id' => $item->id,
