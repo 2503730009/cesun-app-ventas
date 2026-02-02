@@ -32,7 +32,11 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request): JsonResponse
     {
-        $product = Product::create($request->validated());
+        $data = $request->validated();
+        // Basic XSS prevention for free-text inputs.
+        $data['description'] = $this->sanitizeText($data['description'] ?? null);
+
+        $product = Product::create($data);
 
         return response()->json([
             'ok' => true,
@@ -50,7 +54,13 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
-        $product->update($request->validated());
+        $data = $request->validated();
+        // Basic XSS prevention for free-text inputs.
+        if (array_key_exists('description', $data)) {
+            $data['description'] = $this->sanitizeText($data['description']);
+        }
+
+        $product->update($data);
 
         return response()->json([
             'ok' => true,
@@ -66,5 +76,14 @@ class ProductController extends Controller
             'ok' => true,
             'message' => 'Product deleted',
         ]);
+    }
+
+    private function sanitizeText(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return trim(strip_tags($value));
     }
 }

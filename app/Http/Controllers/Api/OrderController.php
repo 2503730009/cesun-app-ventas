@@ -53,7 +53,8 @@ class OrderController extends Controller
                     'vendor_id' => $validated['vendor_id'],
                     'status' => 'pending',
                     'total' => 0,
-                    'customer_name' => $validated['customer_name'] ?? null,
+                    // Basic XSS prevention for free-text inputs.
+                    'customer_name' => $this->sanitizeText($validated['customer_name'] ?? null),
                     'customer_phone' => $validated['customer_phone'] ?? null,
                 ]);
 
@@ -136,5 +137,14 @@ class OrderController extends Controller
                 ];
             })->values(),
         ];
+    }
+
+    private function sanitizeText(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return trim(strip_tags($value));
     }
 }

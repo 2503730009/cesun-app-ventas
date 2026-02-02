@@ -31,6 +31,10 @@ If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Lar
 
 Sensitive order fields (`customer_name`, `customer_phone`) are encrypted at rest using Laravel's native "encrypted" casts. The encryption key comes from `APP_KEY` in your `.env`, so make sure it is set before creating or reading orders.
 
+## Security Notes
+
+SQL Injection is mitigated by Eloquent's parameter binding and request validation (no raw concatenated SQL is used).
+
 ## Laravel Sponsors
 
 We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
