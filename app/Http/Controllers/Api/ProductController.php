@@ -8,15 +8,17 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $products = Product::query()
-            ->with('vendor')
+            ->select(['id', 'vendor_id', 'name', 'description', 'price', 'stock', 'created_at'])
+            ->with(['vendor:id,name,email,phone,created_at'])
             ->latest()
-            ->paginate(10);
+            ->paginate($this->perPage($request));
 
         return response()->json([
             'ok' => true,
@@ -40,7 +42,7 @@ class ProductController extends Controller
 
         return response()->json([
             'ok' => true,
-            'data' => new ProductResource($product->load('vendor')),
+            'data' => new ProductResource($product->load(['vendor:id,name,email,phone,created_at'])),
         ], 201);
     }
 
@@ -48,7 +50,7 @@ class ProductController extends Controller
     {
         return response()->json([
             'ok' => true,
-            'data' => new ProductResource($product->load('vendor')),
+            'data' => new ProductResource($product->load(['vendor:id,name,email,phone,created_at'])),
         ]);
     }
 
@@ -64,7 +66,7 @@ class ProductController extends Controller
 
         return response()->json([
             'ok' => true,
-            'data' => new ProductResource($product->load('vendor')),
+            'data' => new ProductResource($product->load(['vendor:id,name,email,phone,created_at'])),
         ]);
     }
 
@@ -85,5 +87,16 @@ class ProductController extends Controller
         }
 
         return trim(strip_tags($value));
+    }
+
+    private function perPage(Request $request): int
+    {
+        $perPage = $request->query('per_page', 10);
+
+        if (!is_numeric($perPage) || (int) $perPage <= 0) {
+            return 10;
+        }
+
+        return min((int) $perPage, 100);
     }
 }

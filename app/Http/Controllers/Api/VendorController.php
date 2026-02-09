@@ -8,12 +8,15 @@ use App\Http\Requests\UpdateVendorRequest;
 use App\Http\Resources\VendorResource;
 use App\Models\Vendor;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class VendorController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $vendors = Vendor::query()->latest()->paginate(10);
+        $vendors = Vendor::query()
+            ->latest()
+            ->paginate($this->perPage($request));
 
         return response()->json([
             'ok' => true,
@@ -63,5 +66,16 @@ class VendorController extends Controller
             'ok' => true,
             'message' => 'Vendor deleted',
         ]);
+    }
+
+    private function perPage(Request $request): int
+    {
+        $perPage = $request->query('per_page', 10);
+
+        if (!is_numeric($perPage) || (int) $perPage <= 0) {
+            return 10;
+        }
+
+        return min((int) $perPage, 100);
     }
 }

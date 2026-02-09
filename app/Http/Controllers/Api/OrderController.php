@@ -8,16 +8,22 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $orders = Order::query()
-            ->with(['vendor', 'items.product'])
+            ->select(['id', 'vendor_id', 'status', 'total', 'customer_name', 'customer_phone'])
+            ->with([
+                'vendor:id,name,email,phone,created_at',
+                'items:id,order_id,product_id,quantity,unit_price,subtotal',
+                'items.product:id,name,price,stock',
+            ])
             ->latest()
-            ->paginate(10);
+            ->paginate($this->perPage($request));
 
         $data = $orders->getCollection()->transform(fn (Order $order) => $this->orderToArray($order));
 
@@ -35,7 +41,11 @@ class OrderController extends Controller
 
     public function show(Order $order): JsonResponse
     {
-        $order->load(['vendor', 'items.product']);
+        $order->load([
+            'vendor:id,name,email,phone,created_at',
+            'items:id,order_id,product_id,quantity,unit_price,subtotal',
+            'items.product:id,name,price,stock',
+        ]);
 
         return response()->json([
             'ok' => true,
@@ -92,7 +102,11 @@ class OrderController extends Controller
 
                 $order->update(['total' => $total]);
 
-                return $order->load(['vendor', 'items.product']);
+                return $order->load([
+                    'vendor:id,name,email,phone,created_at',
+                    'items:id,order_id,product_id,quantity,unit_price,subtotal',
+                    'items.product:id,name,price,stock',
+                ]);
             });
         } catch (\Throwable $e) {
             return response()->json([
@@ -146,5 +160,16 @@ class OrderController extends Controller
         }
 
         return trim(strip_tags($value));
+    }
+
+    private function perPage(Request $request): int
+    {
+        $perPage = $request->query('per_page', 10);
+
+        if (!is_numeric($perPage) || (int) $perPage <= 0) {
+            return 10;
+        }
+
+        return min((int) $perPage, 100);
     }
 }

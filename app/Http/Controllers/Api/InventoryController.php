@@ -6,15 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateInventoryRequest;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $products = Product::query()
             ->select(['id', 'name', 'stock', 'price'])
             ->orderBy('id')
-            ->paginate(10);
+            ->paginate($this->perPage($request));
 
         $data = $products->getCollection()->transform(fn (Product $product) => [
             'id' => $product->id,
@@ -61,5 +62,16 @@ class InventoryController extends Controller
                 'price' => (string) $product->price,
             ],
         ]);
+    }
+
+    private function perPage(Request $request): int
+    {
+        $perPage = $request->query('per_page', 10);
+
+        if (!is_numeric($perPage) || (int) $perPage <= 0) {
+            return 10;
+        }
+
+        return min((int) $perPage, 100);
     }
 }
